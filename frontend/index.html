@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Favicon will be set dynamically to src/assets/logo.png by Vite -->
+    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ForgeX</title>
+    <script type="module">
+      import logoUrl from '/src/assets/logo.png';
+      function setIcon(rel){
+        let link = document.querySelector(`link[rel="${rel}"]`);
+        if(!link){
+          link = document.createElement('link');
+          link.rel = rel;
+          document.head.appendChild(link);
+        }
+        link.href = `${logoUrl}?v=${Date.now()}`;
+        link.type = 'image/png';
+      }
+      setIcon('icon');
+      setIcon('shortcut icon');
+      // Optional Apple touch icon
+      let apple = document.querySelector('link[rel="apple-touch-icon"]');
+      if(!apple){
+        apple = document.createElement('link');
+        apple.rel = 'apple-touch-icon';
+        document.head.appendChild(apple);
+      }
+      apple.href = logoUrl;
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
