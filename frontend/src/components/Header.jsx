@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import logo from '../assets/logo.png'
-import useWallet from '../hooks/useWallet.js'
+import useWallet from '../hooks/useWallet.jsx'
 import WalletModal from './WalletModal.jsx'
 import { useToasts } from './Toasts.jsx'
+import { Link } from 'react-router-dom'
 
 export default function Header() {
   const [imgSrc, setImgSrc] = useState(logo)
@@ -26,6 +27,10 @@ export default function Header() {
           />
           <span className="text-lg font-semibold tracking-tight">ForgeX</span>
         </div>
+        <nav className="flex-1 hidden sm:flex items-center justify-center gap-2 text-sm">
+          <Link className="px-3 py-1.5 rounded-lg hover:bg-neutral-100" to="/">Home</Link>
+          <Link className="px-3 py-1.5 rounded-lg hover:bg-neutral-100" to="/manage">Manage Tokens</Link>
+        </nav>
         <div className="flex items-center gap-3">
           {isConnected ? (
             <>

@@ -1,65 +1,55 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @notice Minimal ERC-721 collection template used by the factory.
-contract ERC721Collection is ERC721, Ownable (msg.sender) {
-    string private _baseTokenURI;
-    uint256 private _currentTokenId;
+contract ERC721NFT is ERC721URIStorage, Ownable(msg.sender) {
+    uint256 public tokenIdCounter;
+    uint256 public maxSupply;
+    string public collectionURI;
+
+    event NFTMinted(address indexed minter, uint256 indexed tokenId);
 
     constructor(
         string memory name_,
         string memory symbol_,
-        string memory baseURI_,
-        address owner_
+        string memory tokenURIInit,
+        uint256 maxSupply_
     ) ERC721(name_, symbol_) {
-        _baseTokenURI = baseURI_;
-        _transferOwnership(owner_);
+        require(maxSupply_ > 0, "Max supply must be > 0");
+        maxSupply = maxSupply_;
+        collectionURI = tokenURIInit;
+        // Mint the first token to the deployer with provided metadata URI
+        uint256 newId = tokenIdCounter; // starts at 0
+        tokenIdCounter = 1; // next token id
+        _safeMint(msg.sender, newId);
+        _setTokenURI(newId, collectionURI);
+        emit NFTMinted(msg.sender, newId);
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseTokenURI;
+    function mint() external returns (uint256) {
+        require(tokenIdCounter < maxSupply, "Max supply reached");
+        uint256 newId = tokenIdCounter;
+        tokenIdCounter++;
+        _safeMint(msg.sender, newId);
+        _setTokenURI(newId, collectionURI);
+        emit NFTMinted(msg.sender, newId);
+        return newId;
     }
 
-    /// @notice Mint a new token to `to`. Only the collection owner can call.
     function mintTo(address to) external onlyOwner returns (uint256) {
-        _currentTokenId += 1;
-        _mint(to, _currentTokenId);
-        return _currentTokenId;
-    }
-}
-
-/// @title Factory for ERC-721 collections
-/// @notice Deploys minimal ERC-721 collections and tracks user deployments.
-contract FactoryERC721 {
-    mapping(address => address[]) private _collectionsByUser;
-
-    /// @notice Emitted when a new collection is deployed
-    /// @param collection Address of the deployed collection
-    /// @param creator Address that requested the deployment
-    event CollectionDeployed(address indexed collection, address indexed creator);
-
-    /// @notice Deploy a new ERC-721 collection
-    /// @param name Collection name
-    /// @param symbol Collection symbol
-    /// @param baseURI Base URI for token metadata
-    /// @return collectionAddr Address of the deployed collection
-    function createCollection(
-        string memory name,
-        string memory symbol,
-        string memory baseURI
-    ) external returns (address collectionAddr) {
-        ERC721Collection collection = new ERC721Collection(name, symbol, baseURI, msg.sender);
-        collectionAddr = address(collection);
-        _collectionsByUser[msg.sender].push(collectionAddr);
-        emit CollectionDeployed(collectionAddr, msg.sender);
+        require(tokenIdCounter < maxSupply, "Max supply reached");
+        require(to != address(0), "Invalid recipient");
+        uint256 newId = tokenIdCounter;
+        tokenIdCounter++;
+        _safeMint(to, newId);
+        _setTokenURI(newId, collectionURI);
+        emit NFTMinted(to, newId);
+        return newId;
     }
 
-    /// @notice Returns the list of collections deployed by a user
-    /// @param user Address to query
-    function getCollections(address user) external view returns (address[] memory) {
-        return _collectionsByUser[user];
+    function nextTokenId() external view returns (uint256) {
+        return tokenIdCounter;
     }
 }
